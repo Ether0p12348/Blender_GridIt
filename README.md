@@ -13,7 +13,7 @@ This repository contains a Python script for Blender that generates a regular gr
 
 1. Open your Blender project and select a planar mesh object. The mesh should be flat in the XY plane for best results.
 2. In Blender’s **Text Editor**, load the file `blender_grid_script.py` from this repository.
-3. At the bottom of the script, adjust the `STEP` value if you need a different spacing (the default is `0.001` units, or 1 mm).
+3. At the bottom of the script, adjust the `STEP` value if you need a different spacing (the default is `0.005` units, or 5 mm).
 4. Press **Run Script**. A new object will be created in your scene, suffixed with `_grid`, containing the generated grid mesh. The new object is placed on the same plane as the source mesh.
 
 ## How it Works
