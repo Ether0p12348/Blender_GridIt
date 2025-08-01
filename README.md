@@ -1,10 +1,10 @@
 # Grid Mesh Generator for Blender (GridIt)
 
-This repository contains a Python script for Blender that generates a regular grid inside a selected planar mesh, aligning the grid to world‑space intervals (default 1 mm) and conforming the boundary to the shape’s outline. The script creates a new object with a clean quad‑based interior and minimal triangulation along the perimeter.
+This repository contains a Python script for Blender that generates a regular grid inside a selected planar mesh, aligning the grid to world‑space intervals (default 5 mm) and conforming the boundary to the shape’s outline. The script creates a new object with a clean quad‑based interior and minimal triangulation along the perimeter.
 
 ## Features
 
-* **Automatic grid generation** – Fills the interior of any selected planar mesh with a square grid at a specified spacing (default: `0.001` world units).
+* **Automatic grid generation** – Fills the interior of any selected planar mesh with a square grid at a specified spacing (default: `0.005` world units).
 * **Boundary conformity** – Calculates intersections between the mesh outline and the grid lines, then uses these intersection points to approximate the boundary, avoiding heavy fragmentation from the original mesh vertices.
 * **Clean topology** – Uses Blender’s BMesh operators (`edgenet_prepare` and `edgenet_fill`) to connect grid vertices and fill faces, resulting in a quad‑dominated mesh with triangles only where necessary along the boundary.
 * **Custom spacing** – Adjust the `STEP` value in the script to change the grid density.
