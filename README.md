@@ -26,10 +26,17 @@ This repository contains a Python script for Blender that generates a regular gr
 
 ## Example
 
-The image below shows a freeform shape filled with a 1 mm grid. Notice how the interior remains a uniform quad grid while the outer edge conforms to the original shape using intersections with the grid lines.
+The images below show a transformation to a shape filled with a 5 mm (0.005 m) grid. Notice how the interior remains a uniform quad grid while the outer edge conforms to the original shape using intersections with the grid lines.
 
-![Grid example](/path/to/example_image.png) <!-- Replace with an actual path to your example image -->
+Original Shape (SVG converted to Mesh):<br>
+![Original](https://github.com/Ether0p12348/Blender_GridIt/blob/main/original.png)
+
+Generated:<br>
+![Generated](https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated.png)
+
+Generated (Details):<br>
+![Generated Close-up](https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated_closeup.png)
 
 ## Credits
 
-This script and README were created with the assistance of **ChatGPT**, an AI language model developed by OpenAI. Feel free to adapt or improve the script to suit your own workflows. If you find this tool useful, contributions and feedback are welcome!
+This script was created with the assistance of **ChatGPT**, an AI language model developed by OpenAI. Feel free to adapt or improve the script to suit your own workflows. If you find this tool useful, contributions and feedback are welcome!
