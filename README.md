@@ -44,9 +44,9 @@ GridIt is lightweight, but high-density grids can become computationally expensi
 ### Example
 
 <p>
-  <img title="Original Shape" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/original.png" height="250">
-  <img title="Generated Grid (0.005 m)" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated.png" height="250">
-  <img title="Generated Close-up (0.005 m)" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated_closeup.png" height="250">
+  <img title="Original Shape" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/images/original.png" height="250">
+  <img title="Generated Grid (0.005 m)" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/images/generated.png" height="250">
+  <img title="Generated Close-up (0.005 m)" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/images/generated_closeup.png" height="250">
 </p>
 
 ---

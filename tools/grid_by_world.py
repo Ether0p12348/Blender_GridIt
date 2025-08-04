@@ -1,59 +1,37 @@
-"""
-blender_grid_script.py
-======================
-
-This script creates a new mesh object filled with a regular 2D grid of quads
-inside the outline of the currently selected mesh object.  The grid spacing is
-defined in world‐space by the ``step`` argument (defaults to 0.001 units).  The
-algorithm proceeds as follows:
-
-1.  A boundary loop is extracted from the selected object.  A boundary edge in
-    Blender is one that is attached to exactly one face.  According to the
-    Blender Python API, the :class:`bmesh.types.BMEdge.is_boundary` property
-    returns ``True`` when an edge is on the boundary of a face【104200153471113†L2668-L2673】.  These
-    edges collectively outline the silhouette of the mesh on the selected
-    side.
-2.  The boundary vertices are transformed into world space so the grid can be
-    aligned with world coordinates.  We then compute the bounding box of this
-    outline projected onto the XY plane.  From this box we derive a set of
-    vertical and horizontal grid lines spaced by ``step``.
-3.  Each boundary edge is sliced at the points where it crosses a grid line.
-    The function :func:`mathutils.geometry.intersect_line_line_2d` is used to
-    calculate the intersection between a boundary segment and a grid line.  This
-    function accepts two 2D segments and returns the intersection point if it
-    exists【696737194934486†L2346-L2369】.  Intersections falling within the segment endpoints are
-    stored.
-4.  The boundary edges are ordered into a closed loop.  A simple adjacency
-    traversal is used to connect the boundary edges in sequence.  For meshes
-    containing holes, only the first (outermost) loop is considered.
-5.  A point‐in‐polygon test (winding number algorithm) determines whether
-    candidate grid points lie inside the boundary.  Only points inside the
-    polygon are kept.
-6.  A new bmesh is created and populated with vertices at the retained grid
-    points.  Neighbouring vertices are connected to form edges in a grid
-    pattern, and quads are created for each cell.  Finally, the new geometry
-    is written out to a new mesh object.
-
-**Note:** A grid spacing of small units produces very high vertex counts for
-moderately sized objects.  Consider increasing ``step`` to a larger value
-depending on your needs.  Running this script on complex meshes may take a
-significant amount of time and power.
-
-Usage:
-
-    In Blender's text editor, load this file and adjust the ``STEP`` value
-    if necessary.  Select a planar mesh object in the scene and press ``Run
-    Script``.  A new object suffixed with ``_grid`` will appear containing
-    the generated grid.
-"""
-
 import bpy
+from bpy.types import Panel, Operator
+from bpy.props import FloatProperty
 import bmesh
 from mathutils import Vector
 from mathutils import geometry
 from collections import defaultdict
 import math
 
+class GridByWorldSettings(bpy.types.PropertyGroup):
+    grid_world_size: FloatProperty(
+        name="Face Size",
+        description="Distance between grid vertices in world space",
+        default=0.1,
+        min=0.0001,
+        soft_max=10.0
+    )
+
+class GRIDIT_PT_GridByWorldPanel(bpy.types.Panel):
+    bl_label = "Grid by World"
+    bl_idname = "GRIDIT_PT_grid_by_world"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "GridIt"
+
+    def draw(self, context):
+        layout = self.layout
+        draw_ui(layout, context)
+
+
+def draw_ui(layout, context):
+    settings = context.scene.grid_by_world
+    layout.prop(settings, "grid_world_size")
+    layout.operator("gridit.grid_by_world", text="Generate Grid")
 
 def extract_boundary_loop(bm: bmesh.types.BMesh, obj: bpy.types.Object) -> list[Vector]:
     """Return an ordered list of boundary vertices in world space.
@@ -121,7 +99,6 @@ def extract_boundary_loop(bm: bmesh.types.BMesh, obj: bpy.types.Object) -> list[
         world_coords.append(Vector((world_co.x, world_co.y)))
     return world_coords
 
-
 def point_in_polygon(point: Vector, polygon: list[Vector]) -> bool:
     """Determine whether a 2D point is inside a polygon.
 
@@ -157,7 +134,7 @@ def point_in_polygon(point: Vector, polygon: list[Vector]) -> bool:
         # Check if point lies exactly on the segment (v1, v2)
         if abs(is_left(v1, v2, point)) < 1e-9:
             if (min(v1.x, v2.x) - 1e-9) <= point.x <= (max(v1.x, v2.x) + 1e-9) and \
-               (min(v1.y, v2.y) - 1e-9) <= point.y <= (max(v1.y, v2.y) + 1e-9):
+                    (min(v1.y, v2.y) - 1e-9) <= point.y <= (max(v1.y, v2.y) + 1e-9):
                 return True
         # Winding number algorithm
         if v1.y <= point.y:
@@ -170,7 +147,6 @@ def point_in_polygon(point: Vector, polygon: list[Vector]) -> bool:
                     wn -= 1
     return wn != 0
 
-
 def is_left(p0: Vector, p1: Vector, p2: Vector) -> float:
     """Return the z-component of the cross product (p1 - p0) x (p2 - p0).
 
@@ -178,7 +154,6 @@ def is_left(p0: Vector, p1: Vector, p2: Vector) -> float:
     collinear.
     """
     return (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y)
-
 
 def slice_boundary_at_grid(boundary: list[Vector], step: float) -> list[tuple[Vector, int, float]]:
     """Compute intersections of the boundary edges with the grid lines.
@@ -276,8 +251,9 @@ def slice_boundary_at_grid(boundary: list[Vector], step: float) -> list[tuple[Ve
     inter_list.sort(key=lambda x: (x[1], x[2]))
     return inter_list
 
-
-def build_grid_mesh(boundary_points: list[Vector], step: float, name: str = "Grid", extra_points: list[Vector] | None = None, use_extra_as_boundary: bool = False) -> bpy.types.Object:
+def build_grid_mesh(boundary_points: list[Vector], step: float, name: str = "Grid",
+                    extra_points: list[Vector] | None = None,
+                    use_extra_as_boundary: bool = False) -> bpy.types.Object:
     """Construct a grid mesh inside a polygon and link it to the current collection.
 
     Parameters
@@ -450,8 +426,7 @@ def build_grid_mesh(boundary_points: list[Vector], step: float, name: str = "Gri
     bm_new.free()
     return new_obj
 
-
-def run(step: float = 0.001) -> None:
+def run(step: float = 0.1) -> None:
     """Main entry point for the grid creation.
 
     Select a mesh object, then run this function.  It will generate a new
@@ -463,9 +438,6 @@ def run(step: float = 0.001) -> None:
         Spacing of the grid in world units (default 0.001).
     """
     obj = bpy.context.active_object
-    if obj is None or obj.type != 'MESH':
-        print("Please select a mesh object before running the script.")
-        return
     # Ensure we have evaluated mesh data
     depsgraph = bpy.context.evaluated_depsgraph_get()
     obj_eval = obj.evaluated_get(depsgraph)
@@ -490,7 +462,8 @@ def run(step: float = 0.001) -> None:
     # Build grid mesh using the original boundary for interior test and the
     # intersection points for the outer boundary.  When use_extra_as_boundary
     # is true, the extra points define the boundary vertices.
-    grid_obj = build_grid_mesh(boundary, step, obj.name + "_grid", extra_points=ordered_intersections, use_extra_as_boundary=bool(ordered_intersections))
+    grid_obj = build_grid_mesh(boundary, step, obj.name + "_grid", extra_points=ordered_intersections,
+                               use_extra_as_boundary=bool(ordered_intersections))
     # Move the grid object so that it lies in the same plane as the source object
     # We assume the source mesh is planar; align the grid's Z coordinate to the
     # first vertex's world Z value
@@ -499,9 +472,30 @@ def run(step: float = 0.001) -> None:
         grid_obj.location.z = z_val
     bm.free()
 
+class GRIDIT_OT_GridByWorld(Operator):
+    bl_idname = "gridit.grid_by_world"
+    bl_label = "Grid by World"
 
-# When running inside Blender's scripting environment, this block is executed.
-if __name__ == "__main__":
-    # Adjust the step value here if necessary
-    STEP = 0.005
-    run(STEP)
+    def execute(self, context):
+        settings = context.scene.grid_by_world
+        obj = bpy.context.active_object
+        if obj is None or obj.type != 'MESH':
+            print("Please select a mesh object before running the script.")
+            return
+        self.report({'INFO'}, f"Grid size: {settings.grid_world_size}")
+        run(settings.grid_world_size)
+        return {'FINISHED'}
+
+def register():
+    bpy.utils.register_class(GridByWorldSettings)
+    bpy.utils.register_class(GRIDIT_OT_GridByWorld)
+    bpy.utils.register_class(GRIDIT_PT_GridByWorldPanel)
+
+    bpy.types.Scene.grid_by_world = bpy.props.PointerProperty(type=GridByWorldSettings)
+
+def unregister():
+    del bpy.types.Scene.grid_by_world
+
+    bpy.utils.unregister_class(GRIDIT_PT_GridByWorldPanel)
+    bpy.utils.unregister_class(GRIDIT_OT_GridByWorld)
+    bpy.utils.unregister_class(GridByWorldSettings)
