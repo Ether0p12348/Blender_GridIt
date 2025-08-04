@@ -1,42 +1,83 @@
-# Grid Mesh Generator for Blender (GridIt)
+# GridIt — Modular Grid Tools for Blender
 
-This repository contains a Python script for Blender that generates a regular grid inside a selected planar mesh, aligning the grid to world‑space intervals (default 5 mm) and conforming the boundary to the shape’s outline. The script creates a new object with a clean quad‑based interior and minimal triangulation along the perimeter.
+**GridIt** is a modular Blender add-on designed to generate and manipulate clean, efficient grid-based geometry inside arbitrary 2D mesh boundaries. Built with expandability and performance in mind, GridIt aims to provide artists, engineers, and procedural designers with precise control over grid creation in both world and shape-based contexts.
 
-## Features
+> Designed and maintained by [Ethan Robins (Ether0p12348)](https://github.com/Ether0p12348).
+> 
+> **GridIt** was initially created for personal use and prototyping. Some features (_pretty much all of the mathematical stuff_) were rapidly developed with help from [ChatGPT (OpenAI)](https://chat.openai.com), and updates may be irregular. Thanks for checking it out!
 
-* **Automatic grid generation** – Fills the interior of any selected planar mesh with a square grid at a specified spacing (default: `0.005` world units).
-* **Boundary conformity** – Calculates intersections between the mesh outline and the grid lines, then uses these intersection points to approximate the boundary, avoiding heavy fragmentation from the original mesh vertices.
-* **Clean topology** – Uses Blender’s BMesh operators (`edgenet_prepare` and `edgenet_fill`) to connect grid vertices and fill faces, resulting in a quad‑dominated mesh with triangles only where necessary along the boundary.
-* **Custom spacing** – Adjust the `STEP` value in the script to change the grid density.
+---
 
-## Usage
+## Installation
 
-1. Open your Blender project and select a planar mesh object. The mesh should be flat in the XY plane for best results.
-2. In Blender’s **Text Editor**, load the file `blender_grid_script.py` from this repository.
-3. At the bottom of the script, adjust the `STEP` value if you need a different spacing (the default is `0.005` units, or 5 mm).
-4. Press **Run Script**. A new object will be created in your scene, suffixed with `_grid`, containing the generated grid mesh. The new object is placed on the same plane as the source mesh.
+1. Download the latest `.zip` file from the [GitHub Releases](https://github.com/Ether0p12348/Blender_GridIt/releases).
+2. In Blender, go to **Edit > Preferences > Add-ons**.
+3. Click **Install…**, then select the downloaded `.zip`.
+4. Enable **GridIt** from the list.
+5. The panel will appear in the **3D Viewport > Sidebar (N-panel) > GridIt tab**.
 
-## How it Works
+---
 
-1. The script uses Blender’s BMesh API to extract the boundary loop of the selected object. Only the outer boundary is considered.
-2. It computes the intersections of the boundary edges with vertical and horizontal grid lines spaced at the chosen increment. These intersection points become the new boundary vertices. Original boundary vertices are not used unless absolutely necessary, ensuring a clean outline.
-3. Interior grid points are generated at every multiple of the spacing that lies inside the original shape using a point‑in‑polygon test. Each grid point becomes a vertex in the new mesh.
-4. Boundary vertices are connected to the nearest interior grid point to form triangular “fans” along the perimeter. Horizontal and vertical grid edges are created between interior vertices to form a uniform grid.
-5. BMesh operations `edgenet_prepare` and `edgenet_fill` are used to automatically create faces from the resulting edge network.
+## System Requirements
 
-## Example
+GridIt is lightweight, but high-density grids can become computationally expensive.
 
-The images below show a transformation to a shape filled with a 5 mm (0.005 m) grid. Notice how the interior remains a uniform quad grid while the outer edge conforms to the original shape using intersections with the grid lines.
+- Minimum: Blender 4.5+, 8 GB RAM
+- Recommended: 16 GB RAM, modern CPU/GPU
+- You can set your update channel or manually limit max settings in the Preferences.
 
-Original Shape (SVG converted to Mesh):<br>
-![Original](https://github.com/Ether0p12348/Blender_GridIt/blob/main/original.png)
+---
 
-Generated:<br>
-![Generated](https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated.png)
+## Grid by World
 
-Generated (Details):<br>
-![Generated Close-up](https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated_closeup.png)
+- Generates a uniform quad grid aligned to world-space intervals (default 5 mm).
+- Fills the interior of any selected planar mesh, conforming to the boundary shape.
+- Ensures clean, quad-dominant topology using BMesh operators.
 
-## Credits
+### Usage
+1. Select a **flat mesh object** (XY-plane preferred).
+2. Open the **GridIt** panel.
+3. Set the **grid spacing** (default is `0.1 m`).
+4. Click **Generate Grid**.
+5. A new object will be created with the suffix `_grid`.
 
-This script was created with the assistance of **ChatGPT**, an AI language model developed by OpenAI. Feel free to adapt or improve the script to suit your own workflows. If you find this tool useful, contributions and feedback are welcome!
+### Example
+
+<p>
+  <img title="Original Shape" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/original.png" height="250">
+  <img title="Generated Grid (0.005 m)" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated.png" height="250">
+  <img title="Generated Close-up (0.005 m)" src="https://github.com/Ether0p12348/Blender_GridIt/blob/main/generated_closeup.png" height="250">
+</p>
+
+---
+
+## Updates
+
+GridIt supports automatic updates directly from GitHub. Updates will be downloaded and installed based on your selected release channel:
+
+| Channel | Description | Access |
+|---------|-------------|--------|
+| `Stable` | Fully tested builds | Default |
+| `Beta` | New features, less tested | Open |
+| `Dev` | Experimental builds | Password-gated (future support) |
+
+Release tags follow this pattern:
+- `vX.Y.Z` → stable
+- `vX.Y.Z-beta` → beta
+- `vX.Y.Z-dev` → dev
+
+**You may opt out of automatic updates at any time via the Add-on Preferences.**
+
+When an update is installed, the add-on will automatically reload without requiring you to restart Blender — allowing you to continue your work uninterrupted.
+
+---
+
+## Contributing
+
+Pull requests, ideas, and feedback are welcome! If you'd like to contribute tools or fixes, feel free to fork the project.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.
