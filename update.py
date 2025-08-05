@@ -71,43 +71,43 @@ def download_and_install_update(tag: str, zip_url: str):
         print(f"[GridIt] Update Failed: {e}")
         return False
 
-def check_for_updates():
-    prefs = bpy.context.preferences.addons[__package__].preferences
-    channel = prefs.update_channel
+def check_for_updates(force: bool = False):
+    addon_name = "gridit"
+    prefs = bpy.context.preferences.addons[addon_name].preferences
+    channel = prefs.update_channel_sel
     print(f"[GridIt] Checking for updates on '{channel}' channel...")
 
-    current_version = bpy.context.preferences.addons[__package__].bl_info['version']
+    current_version = bpy.context.preferences.addons[addon_name].bl_info['version']
     current_version_str = ".".join(map(str, current_version))
 
     release = get_latest_release(channel)
     if release and release['tag'] != current_version_str:
         print(f"[GridIt] New update available: {release['tag']}")
-        download_and_install_update(release['tag'], release['zip_url'])
+        if force or bpy.context.preferences.addons[addon_name].preferences.auto_update:
+            download_and_install_update(release['tag'], release['zip_url'])
     else:
         print("[GridIt] No updates available.")
 
     return 3600.0  # Check again in an hour
 
 def reload_addon():
-    module_name = __package__
-    print(f"[GridIt] Reloading addon '{module_name}'")
+    addon_name = "gridit"
 
-    addon_utils.disable(module_name, default_set=True, handle_errors=True)
+    if addon_name in bpy.context.preferences.addons:
+        addon_module = bpy.context.preferences.addons[addon_name].module
+        try:
+            importlib.reload(addon_module)
 
-    try:
-        module = importlib.import_module(module_name)
-        importlib.reload(module)
-    except Exception as e:
-        print(f"[GridIt] Failed to reload module: {e}")
-        return None
+            if hasattr(addon_module, "unregister"):
+                addon_module.unregister()
+            if hasattr(addon_module, "register"):
+                addon_module.register()
 
-    try:
-        addon_utils.enable(module_name, default_set=True, handle_errors=True)
-        print(f"[GridIt] Reload complete.")
-    except Exception as e:
-        print(f"[GridIt] Failed to re-enable addon: {e}")
-
-    return None
+            print(f"[GridIt] Reloaded add-on: {addon_name}")
+        except Exception as e:
+            print(f"[GridIt] Error reloading add-on: {e}")
+    else:
+        print("[GridIt] Add-on not found for reloading.")
 
 def register():
     bpy.app.timers.register(check_for_updates, first_interval=5.0)

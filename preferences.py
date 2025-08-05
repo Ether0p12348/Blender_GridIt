@@ -1,9 +1,11 @@
 import bpy
+from .bl_info import bl_info, update_channel
+from .enums import UpdateChannel
 
 class GridItPreferences(bpy.types.AddonPreferences):
-    bl_idname = __package__
+    bl_idname = "gridit"
 
-    update_channel: bpy.props.EnumProperty(
+    update_channel_sel: bpy.props.EnumProperty(
         name="Update Channel",
         description="Choose which channel to check for updates",
         items=[
@@ -14,16 +16,29 @@ class GridItPreferences(bpy.types.AddonPreferences):
         default='stable'
     )
 
+    auto_update: bpy.props.BoolProperty(
+        name="Automatic Updates",
+        description="Automatically install updates",
+        default=True
+    )
+
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "update_channel")
+
+        v_row = layout.row() # Not getting drawn
+        v_row.label(text=f"GridIt Version: v{'.'.join(map(str, bl_info['version']))}-{str(update_channel.value)}") # Not getting drawn
+
+        layout.separator() # Not getting drawn
+        layout.label(text="Updates") # Not getting drawn
+        up_row = layout.row()
+        up_row.prop(self, "auto_update") # Not getting drawn
+        up_row.prop(self, "update_channel_sel")
 
         layout.separator()
-        layout.label(text="Maintenance Tools")
-
-        row = layout.row()
-        row.operator("gridit.check_updates", icon="FILE_SCRIPT")
-        row.operator("gridit.manual_reload", icon="FILE_REFRESH")
+        layout.label(text="Maintenance")
+        maint_row = layout.row()
+        maint_row.operator("gridit.check_updates", icon="FILE_SCRIPT")
+        maint_row.operator("gridit.manual_reload", icon="FILE_REFRESH")
 
 class GRIDIT_OT_ManualReload(bpy.types.Operator):
     bl_idname = "gridit.manual_reload"
@@ -31,7 +46,8 @@ class GRIDIT_OT_ManualReload(bpy.types.Operator):
     bl_description = "Force reload the GridIt add-on"
     def execute(self, context):
         from . import update
-        bpy.app.timers.register(update.reload_addon, first_interval=0.5)
+        update.reload_addon()
+        self.report({'INFO'}, "GridIt reloaded")
         return {'FINISHED'}
 
 class GRIDIT_OT_CheckUpdates(bpy.types.Operator):
@@ -40,7 +56,7 @@ class GRIDIT_OT_CheckUpdates(bpy.types.Operator):
     bl_description = "Immediately check Github for updates (will install if available)"
     def execute(self, context):
         from . import update
-        update.check_for_updates()
+        update.check_for_updates(True)
         return {'FINISHED'}
 
 classes = (
