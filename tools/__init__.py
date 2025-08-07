@@ -1,7 +1,11 @@
 from . import grid_by_world
 
+modules = [grid_by_world]
+
 def register():
-    grid_by_world.register()
+    for mod in modules:
+        mod.register()
 
 def unregister():
-    grid_by_world.unregister()
+    for mod in modules:
+        mod.unregister()

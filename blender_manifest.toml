@@ -1,0 +1,37 @@
+schema_version = "1.0.0"
+
+id = "gridit"
+version = "0.2.0-beta"
+name = "GridIt"
+tagline = "Shape-preserving remeshing/topology tool"
+maintainer = "Ethan Robins"
+type = "add-on"
+
+website = "https://github.com/Ether0p12348/Blender_GridIt"
+tags = ["Mesh"]
+
+blender_version_min = "4.5.0"
+
+license = [
+    "SPDX:MIT"
+]
+copyright = [
+    "2025 Ethan Robins"
+]
+
+[permissions]
+network = "Used to check and download updates from github (Currently Unavailable)"
+files = "Used for reading/writing update files (Currently Unavailable)"
+
+[build]
+paths_exclude_pattern = [
+    "__pycache__/",
+    ".git/",
+    ".idea/",
+    "*.zip",
+    "venv/",
+    "*.blend1",
+    "*.log",
+    ".gitignore",
+    "images/"
+]

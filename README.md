@@ -4,16 +4,16 @@
 
 > Designed and maintained by [Ethan Robins (Ether0p12348)](https://github.com/Ether0p12348).
 > 
-> **GridIt** was initially created for personal use and prototyping. Some features (_pretty much all of the mathematical stuff_) were rapidly developed with help from [ChatGPT (OpenAI)](https://chat.openai.com), and updates may be irregular. Thanks for checking it out!
+> **GridIt** was initially created for personal use and prototyping. Some features (_pretty much all the mathematical stuff_) were rapidly developed with help from [ChatGPT (OpenAI)](https://chat.openai.com), and updates may be irregular. Thanks for checking it out!
 
 ---
 
 ## Installation
 
 1. Download the latest `.zip` file from the [GitHub Releases](https://github.com/Ether0p12348/Blender_GridIt/releases).
-2. In Blender, go to **Edit > Preferences > Add-ons**.
-3. Click **Install…**, then select the downloaded `.zip`.
-4. Enable **GridIt** from the list.
+2. In Blender, go to **Edit > Preferences > Get Extensions**.
+3. Click on the drop-down in the top right and click **Install from Disk...**, then select the downloaded `.zip`.
+4. Enable **GridIt** from the list, if not already enabled.
 5. The panel will appear in the **3D Viewport > Sidebar (N-panel) > GridIt tab**.
 
 ---
@@ -24,11 +24,11 @@ GridIt is lightweight, but high-density grids can become computationally expensi
 
 - Minimum: Blender 4.5+, 8 GB RAM
 - Recommended: 16 GB RAM, modern CPU/GPU
-- You can set your update channel or manually limit max settings in the Preferences.
+- You can set your update channel or *manually limit max settings in the Preferences (Coming Soon).
 
 ---
 
-## Grid by World
+## Grid by World (quad)
 
 - Generates a uniform quad grid aligned to world-space intervals (default 5 mm).
 - Fills the interior of any selected planar mesh, conforming to the boundary shape.
@@ -51,15 +51,23 @@ GridIt is lightweight, but high-density grids can become computationally expensi
 
 ---
 
+## Coming Soon
+
+- **Grid by Shape:** Generates quads bound to the outer shape of the selected mesh.
+- **Grid by World (sub-quad):** Generates subdivided quads aligned to world-space intervals.
+- **Grid by World (tris):** Generates tris aligned to world-space intervals.
+
+---
+
 ## Updates
 
 GridIt supports automatic updates directly from GitHub. Updates will be downloaded and installed based on your selected release channel:
 
-| Channel | Description | Access |
-|---------|-------------|--------|
-| `Stable` | Fully tested builds | Default |
-| `Beta` | New features, less tested | Open |
-| `Dev` | Experimental builds | Password-gated (future support) |
+| Channel  | Description               | Access                          |
+|----------|---------------------------|---------------------------------|
+| `Stable` | Fully tested builds       | Default                         |
+| `Beta`   | New features, less tested | Open                            |
+| `Dev`    | Experimental builds       | Password-gated (future support) |
 
 Release tags follow this pattern:
 - `vX.Y.Z` → stable

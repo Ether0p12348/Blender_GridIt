@@ -1,62 +1,96 @@
 import bpy
-from .bl_info import bl_info, update_channel
+
+from .manifest import manifest
 from .enums import UpdateChannel
 
-class GridItPreferences(bpy.types.AddonPreferences):
-    bl_idname = "gridit"
+def get_addon_prefs():
+    wm = bpy.context.window_manager
+    return wm.get(f"{manifest.id}_prefs", {})
 
-    update_channel_sel: bpy.props.EnumProperty(
-        name="Update Channel",
-        description="Choose which channel to check for updates",
-        items=[
-            ('stable', "Stable", "Only install stable updates"),
-            ('beta', "Beta", "Install beta versions as well"),
-            ('dev', "Developer", "Get all development updates")
-        ],
-        default='stable'
-    )
 
-    auto_update: bpy.props.BoolProperty(
-        name="Automatic Updates",
-        description="Automatically install updates",
-        default=True
-    )
+def set_addon_pref(key, value):
+    wm = bpy.context.window_manager
+    prefs = wm.get(f"{manifest.id}_prefs", {})
+    prefs[key] = value
+    wm[f"{manifest.id}_prefs"] = prefs
+
+
+class GridItPreferences(bpy.types.Panel):
+    bl_extension_id = manifest.id
+    bl_label = f"{manifest.name} Preferences"
+    bl_space_type = 'PREFERENCES'
+    bl_region_type = 'WINDOW'
+    bl_context = "extensions"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def register(cls):
+        bpy.types.WindowManager.gridit_auto_update = bpy.props.BoolProperty(
+            name="Automatic Updates",
+            description="Automatically install updates",
+            default=True
+        )
+        bpy.types.WindowManager.gridit_update_channel_sel = bpy.props.EnumProperty(
+            name="Update Channel",
+            description="Choose which channel to check for updates",
+            items=[
+                (UpdateChannel.STABLE.value, "Stable", "Only install stable updates"),
+                (UpdateChannel.BETA.value, "Beta", "Install beta versions as well"),
+                (UpdateChannel.DEV.value, "Dev", "Get all development updates")
+            ],
+            default=UpdateChannel.STABLE.value
+        )
+
+    @classmethod
+    def unregister(cls):
+        del bpy.types.WindowManager.gridit_auto_update
+        del bpy.types.WindowManager.gridit_update_channel_sel
 
     def draw(self, context):
         layout = self.layout
+        wm = context.window_manager
 
-        v_row = layout.row() # Not getting drawn
-        v_row.label(text=f"GridIt Version: v{'.'.join(map(str, bl_info['version']))}-{str(update_channel.value)}") # Not getting drawn
+        about_box = layout.box()
+        about_box.label(text=f"About {manifest.name}", icon="INFO")
+        about_box.label(text=f"v{manifest.version} ({manifest.type})")
+        about_box.separator()
+        about_box.label(text="Links:")
+        if manifest.website:
+            row = about_box.row()
+            row.operator("wm.url_open", text="GitHub Repository", icon="URL").url = manifest.website
 
-        layout.separator() # Not getting drawn
-        layout.label(text="Updates") # Not getting drawn
-        up_row = layout.row()
-        up_row.prop(self, "auto_update") # Not getting drawn
-        up_row.prop(self, "update_channel_sel")
+        options_box = layout.box()
+        options_box.enabled = False
+        options_box.label(text="Options (Unavailable)", icon="PREFERENCES")
+        options_box.prop(wm, "gridit_auto_update")
+        options_box.prop(wm, "gridit_update_channel_sel")
+        options_box.separator()
 
-        layout.separator()
-        layout.label(text="Maintenance")
-        maint_row = layout.row()
-        maint_row.operator("gridit.check_updates", icon="FILE_SCRIPT")
-        maint_row.operator("gridit.manual_reload", icon="FILE_REFRESH")
+        options_box.label(text="Maintenance", icon="TOOL_SETTINGS")
+        maint_row = options_box.row()
+        maint_row.operator(f"{manifest.id}.check_updates", icon="FILE_SCRIPT")
+        maint_row.operator(f"{manifest.id}.manual_reload", icon="FILE_REFRESH")
 
 class GRIDIT_OT_ManualReload(bpy.types.Operator):
-    bl_idname = "gridit.manual_reload"
-    bl_label = "Reload GridIt"
-    bl_description = "Force reload the GridIt add-on"
+    bl_idname = f"{manifest.id}.manual_reload"
+    bl_label = f"Reload {manifest.name}"
+    bl_description = f"Force reload the {manifest.name} {manifest.type}"
+
     def execute(self, context):
-        from . import update
-        update.reload_addon()
-        self.report({'INFO'}, "GridIt reloaded")
+        from .update import reload_addon
+        self.report({'INFO'}, f"{manifest.name} reloading...")
+        reload_addon()
         return {'FINISHED'}
 
 class GRIDIT_OT_CheckUpdates(bpy.types.Operator):
-    bl_idname = "gridit.check_updates"
+    bl_idname = f"{manifest.id}.check_updates"
     bl_label = "Check for Updates"
-    bl_description = "Immediately check Github for updates (will install if available)"
+    bl_description = "Immediately check GitHub for updates (will install if available)"
+
     def execute(self, context):
-        from . import update
-        update.check_for_updates(True)
+        from .update import check_for_updates
+        self.report({'INFO'}, f"Checking for updates for {manifest.name}...")
+        check_for_updates(True)
         return {'FINISHED'}
 
 classes = (

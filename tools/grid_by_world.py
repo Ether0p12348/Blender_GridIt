@@ -1,37 +1,51 @@
 import bpy
-from bpy.types import Panel, Operator
-from bpy.props import FloatProperty
 import bmesh
-from mathutils import Vector
-from mathutils import geometry
-from collections import defaultdict
 import math
+from mathutils import Vector
+from bpy.types import Panel, Operator, PropertyGroup
+from bpy.props import FloatProperty
+from collections import defaultdict
 
-class GridByWorldSettings(bpy.types.PropertyGroup):
+from ..manifest import manifest
+
+class GridByWorldSettings(PropertyGroup):
     grid_world_size: FloatProperty(
         name="Face Size",
-        description="Distance between grid vertices in world space",
+        description="Size of the grid faces in world space",
         default=0.1,
         min=0.0001,
         soft_max=10.0
     )
 
-class GRIDIT_PT_GridByWorldPanel(bpy.types.Panel):
+class GRIDIT_PT_GridByWorldPanel(Panel):
     bl_label = "Grid by World"
-    bl_idname = "GRIDIT_PT_grid_by_world"
+    bl_idname = "GRIDIT_PT_Grid_by_world"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "GridIt"
+    bl_category = f"{manifest.name}"
 
     def draw(self, context):
         layout = self.layout
-        draw_ui(layout, context)
 
+        settings = context.scene.grid_by_world
+        layout.prop(settings, "grid_world_size")
+        layout.operator(f"{manifest.id}.grid_by_world", text="Generate Grid")
 
-def draw_ui(layout, context):
-    settings = context.scene.grid_by_world
-    layout.prop(settings, "grid_world_size")
-    layout.operator("gridit.grid_by_world", text="Generate Grid")
+class GRIDIT_OT_GridByWorld(Operator):
+    bl_idname = f"{manifest.id}.grid_by_world"
+    bl_label = "Grid by World"
+
+    def execute(self, context):
+        obj = context.active_object
+        settings = context.scene.grid_by_world
+
+        if not obj or obj.type != 'MESH':
+            self.report({'ERROR'}, "Please select a mesh object.")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, f"Generating grid with spacing {settings.grid_world_size}")
+        run(settings.grid_world_size)
+        return {'FINISHED'}
 
 def extract_boundary_loop(bm: bmesh.types.BMesh, obj: bpy.types.Object) -> list[Vector]:
     """Return an ordered list of boundary vertices in world space.
@@ -146,14 +160,6 @@ def point_in_polygon(point: Vector, polygon: list[Vector]) -> bool:
                 if is_left(v1, v2, point) < 0:
                     wn -= 1
     return wn != 0
-
-def is_left(p0: Vector, p1: Vector, p2: Vector) -> float:
-    """Return the z-component of the cross product (p1 - p0) x (p2 - p0).
-
-    Positive when p2 is left of the line p0->p1, negative when right, zero if
-    collinear.
-    """
-    return (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y)
 
 def slice_boundary_at_grid(boundary: list[Vector], step: float) -> list[tuple[Vector, int, float]]:
     """Compute intersections of the boundary edges with the grid lines.
@@ -472,30 +478,26 @@ def run(step: float = 0.1) -> None:
         grid_obj.location.z = z_val
     bm.free()
 
-class GRIDIT_OT_GridByWorld(Operator):
-    bl_idname = "gridit.grid_by_world"
-    bl_label = "Grid by World"
+def is_left(p0: Vector, p1: Vector, p2: Vector) -> float:
+    """Return the z-component of the cross product (p1 - p0) x (p2 - p0).
 
-    def execute(self, context):
-        settings = context.scene.grid_by_world
-        obj = bpy.context.active_object
-        if obj is None or obj.type != 'MESH':
-            print("Please select a mesh object before running the script.")
-            return
-        self.report({'INFO'}, f"Grid size: {settings.grid_world_size}")
-        run(settings.grid_world_size)
-        return {'FINISHED'}
+    Positive when p2 is left of the line p0->p1, negative when right, zero if
+    collinear.
+    """
+    return (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y)
+
+classes = (
+    GridByWorldSettings,
+    GRIDIT_PT_GridByWorldPanel,
+    GRIDIT_OT_GridByWorld
+)
 
 def register():
-    bpy.utils.register_class(GridByWorldSettings)
-    bpy.utils.register_class(GRIDIT_OT_GridByWorld)
-    bpy.utils.register_class(GRIDIT_PT_GridByWorldPanel)
-
+    for cls in classes:
+        bpy.utils.register_class(cls)
     bpy.types.Scene.grid_by_world = bpy.props.PointerProperty(type=GridByWorldSettings)
 
 def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
     del bpy.types.Scene.grid_by_world
-
-    bpy.utils.unregister_class(GRIDIT_PT_GridByWorldPanel)
-    bpy.utils.unregister_class(GRIDIT_OT_GridByWorld)
-    bpy.utils.unregister_class(GridByWorldSettings)
